@@ -3,11 +3,19 @@ Location Analytics — Pay-by-Geography Benchmarking
 Streamlit app: pick a metro, see its cost/pay tier and recommended
 location pay multiplier for a given national base salary.
 """
+from pathlib import Path
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
 st.set_page_config(page_title="Location Pay Benchmarking", layout="wide")
+
+# Streamlit Cloud runs the app with the working directory set to the repo
+# root, not to this file's own folder -- so a plain relative path like
+# "../data/..." breaks there even though it works locally. Anchor to this
+# file's actual location instead, which is correct everywhere.
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 TIER_LABELS = {
     1: "Tier 1 — Major Metro, High Cost & Pay",
@@ -21,8 +29,8 @@ TIER_COLORS = {1: "#7B2FF7", 2: "#2F7BF7", 3: "#2FC7B4", 4: "#F7A62F", 5: "#F757
 
 @st.cache_data
 def load_data():
-    df = pd.read_parquet("../data/msa_tiers.parquet")
-    mult = pd.read_csv("../data/tier_multipliers.csv").set_index("tier")["pay_multiplier"]
+    df = pd.read_parquet(DATA_DIR / "msa_tiers.parquet")
+    mult = pd.read_csv(DATA_DIR / "tier_multipliers.csv").set_index("tier")["pay_multiplier"]
     df["tier_label"] = df["tier"].map(TIER_LABELS)
     df["pay_multiplier"] = df["tier"].map(mult)
     return df, mult
@@ -126,6 +134,6 @@ with tab3:
         """
     )
     import json
-    with open("../data/model_metrics.json") as f:
+    with open(DATA_DIR / "model_metrics.json") as f:
         metrics = json.load(f)
     st.json(metrics)
